@@ -262,112 +262,67 @@ for i = id
     end
     
     split_lines = split_lines(~cellfun('isempty',split_lines));
+    object_composite = zeros(size(object));
     
-    for m = 1:length(split_lines)
-        
-        object1 = object;
-        object1(sub2ind(size(object),split_lines{m}(:,1),split_lines{m}(:,2))) = 0;
-        object1 = bwareaopen(object1,20,4);
-        new_objects = bwlabel(object1,4);
-        num_new = max(new_objects(:));
-        prob = zeros(num_new,1);
-        e_error = zeros(num_new,1);
-        single_cells = [];
-        
-        
-        for n = 1:num_new
-            
-            ellipticity = cellEllipse(new_objects,n);
-            area = cellArea(new_objects,n);
-            [ellipse1, test] = ellipseError(new_objects,n);
-            if isempty(ellipse1) == 1 || isempty(test) == 1
-                e_error(n) = ee_thresh+1;
-            else
-                e_error(n) = ellipseTest(ellipse1,test,area,pix_size);
-            end
-            %prob(n) = cell_prob(ellipticity(1,1),area,ellip_compare,area_compare,density);
-            
-            if e_error(n) < ee_thresh %&& prob(n) > thresh
-                
-                single_cells = [single_cells 1];
-                break
-            
-            end
-            
-            if sum(single_cells) >= 1
-                break
-            end
-            
+    while 0 < 1
+        error_array = [0,0,100];
+        [ellipse_old,test_old] = ellipseError(object,1);
+        if isempty(ellipse_old) == 1 || isempty(test_old) == 1
+            error_old = ee_thresh+1;
+        else
+            error_old = ellipseTest(ellipse_old,test_old,cellArea(object,1),pix_size);
         end
         
-        if sum(single_cells) >= 1
-            break 
-        else 
-            if m > 1
-                for md = 1:m-1
-                    object1 = object;
-                    
-                    object1(sub2ind(size(object),split_lines{m}(:,1),split_lines{m}(:,2))) = 0;
-                    object1(sub2ind(size(object),split_lines{md}(:,1),split_lines{md}(:,2))) = 0;
-                    object1 = bwareaopen(object1,20,4);
-                    new_objects = bwlabel(object1,4);
-                    num_new = max(new_objects(:));
-                    %prob = zeros(num_new,1);
-                    e_error = zeros(num_new,1);
-                    single_cells = [];
-                    
-                    
-                    for nd = 1:num_new
-                        ellipticity = cellEllipse(new_objects,nd);
-                        area = cellArea(new_objects,nd,pix_size);
-                        [ellipse1, test] = ellipseError(new_objects,nd);
-                        if isempty(ellipse1) == 1 || isempty(test) == 1
-                            e_error(nd) = 2;
-                        else
-                            e_error(nd) = ellipseTest(ellipse1,test,area,pix_size);
-                        end
-                        
-                        %prob(nd) = cell_prob(ellipticity(1,1),area,ellip_compare,area_compare,density);
-                        
-                        if e_error(nd) < ee_thresh %&& prob(nd) > thresh
-                            
-                            single_cells = [single_cells 1];
-                            break
-                            
-                        end
-                        
-                        if sum(single_cells) >= 1
-                            break
-                        end
-                        
-                    end
-                    
-                    if sum(single_cells) >=1
-                        break 
-                    end
-                    
-                end
-                
-                if sum(single_cells) >= 1
-                    break
+        if error_old < ee_thresh
+            object_composite = object_composite + object;
+            break
+        end
+        
+        for m = 1:length(split_lines)
+            
+            object1 = object;
+            object1(sub2ind(size(object),split_lines{m}(:,1),split_lines{m}(:,2))) = 0;
+            object1 = bwareaopen(object1,20,4);
+            new_objects = bwlabel(object1,4);
+            num_new = max(new_objects(:));
+            e_error = zeros(1,num_new);
+            
+            
+            for n = 1:num_new
+                [ellipse1, test] = ellipseError(new_objects,n);
+                if isempty(ellipse1) == 1 || isempty(test) == 1
+                    e_error(n) = ee_thresh+1;
+                else
+                    e_error(n) = ellipseTest(ellipse1,test,cellArea(new_objects,n),pix_size);
                 end
             end
+            
+            [min_error,mindex] = min(e_error);
+            if min_error < error_array(3)
+                error_array(1) = m;
+                error_array(2) = mindex;
+                error_array(3) = min_error;
+            end
+            
         end
         
-        if sum(single_cells) >= 1
-            break 
+        if error_array(3) < ee_thresh && error_array(3) < error_old
+            object_new = object;
+            object_new(sub2ind(size(object),split_lines{error_array(1)}(:,1),split_lines{error_array(1)}(:,2))) = 0;
+            object_new2 = bwlabel(object_new,4);
+            object_new_new = (object_new2 == error_array(2));
+            object_old = (object_new ~= object_new_new);
+            object = object_old;
+            object_composite = object_composite + object_new_new;
+            split_lines{error_array(1)} = [];
+            split_lines = split_lines(~cellfun('isempty',split_lines));
+        else
+            break
         end
+        
+        
+    end
     
-        end
- 
-end
-
-if (exist('single_cells') == 1 && sum(single_cells) >=1) 
-    split_im = object1;
-else 
-    split_im = object;
-    split_lines = {};
-end
-    
+    split_im = object_composite;
 
 end

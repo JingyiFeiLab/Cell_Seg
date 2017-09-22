@@ -1,37 +1,33 @@
-
 clear all
 clc
-%filename = strcat(['crop2_5smooth_',num2str(int_file(sim_round)),'.mat']);
+
 
 dim  = 3;%input('Number of D''s (2/3) : ');
 ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
-ref_slice = 1;
+ref_slice = 5;
 slices2D = 2; % How many frames above and below reference frame (e.g. 4 = reference frame +/- 4 frames)
 pix_size = .130; %Microns
 
-int_thresh = .00001; % Intensity Threshold
+int_thresh = .000001; % Intensity Threshold
 convolve_thresh = .05; % Threshold for Voxels to include in Convolved data
 ee_thresh = 1.5;  % <--- Splitting threshold, you can change this
 shape3D_thresh = 2;
 concavity_thresh = .3;
 background_thresh = .25;
-pix_neigh = 10; %floor((.08/pix_size)*12); <- If you have no idea, try this
-volume_thresh = 600;
-slice_thresh = 5;
+pix_neigh = 11; %floor((.08/pix_size)*12); <- If you have no idea, try this
+volume_thresh = 500;
+slice_thresh = 3;
 zangle_thresh = 1;
 dist_thresh = 4;
 low_pass_check = 0; % 1 = on. Change to 0 if you want to turn it off
 gap_thresh = 5;
 
 % Path to main file (i.e. channel) that you will use for segmentation
-%     filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/August_24_17_convert/-SgrS(no_plasmid)/t=20/sample',num2str(cell_num)]);
-%     filepath_dic = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/August_24_17_convert/-SgrS(no_plasmid)/t=20/dic',num2str(cell_num),'.tif']);
-%
-filepath = '/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/1_14_17_invasion_converted/0hr/wt_sopE_G1_crop';
+%filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/September_3_2017_convert/manX_gfp_no_plasmid/t20/sample',num2str(cell_num)]);
+filepath = '/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/1_14_17_invasion_converted/0hr/wt_sopE_G1_crop2';
 
 
 [slice, stack_o, stack_red, stack_green, stack_blue, stack_back, slices, red_back, green_back, blue_back] = imFormat(filepath,ref_channel,dim,ref_slice,slices2D);
-
 
 
 se = [1 1 1; 1 1 1 ; 1 1 1]; % Structuring Element for basic Erosion and dilation
@@ -54,10 +50,10 @@ ydim = size(stack_o,2);
 
 edge_cut = 2;
 
-for g = 1:slices
-    %for g = 9
+%for g = slice
+for g = 8
     strcat(['Working on Frame ' , num2str(g), ' ... '])
-    stack2(:,:,g) = anisodiff2D(stack_o(:,:,g),3,1/7,30,1);
+    stack2(:,:,g) = anisodiff2D(stack_o(:,:,g),1,1/7,30,1);
     I=stack_o(:,:,g);
     [r,c] = size(I);
     I2 = stack2(:,:,g);
@@ -90,8 +86,15 @@ for g = 1:slices
     BW = imfill(imclearborder(smallID(bwlabel(BW,4))),'holes');
     
     objects = bwlabel(BW,4);
-    
     num = max(objects(:));
+    
+    
+    for i = 1:num
+        [~,~,con_peaks] = edgeOptimize(objects,i);
+        if con_peaks>=3
+            objects(objects==i) = 0;
+        end
+    end
     
     ellipse_error = zeros(num,1);
     test_ellipse = {};
@@ -191,65 +194,27 @@ field9 = 'All'; % All Objects, single and multi
 part2 = struct(field1, [] , field2, [], field3, [], field4, [], field5, [], field6, [], field7, [], field8, [], field9, []); %Table for Part 2
 
 split = cell(1,slices);
-for g = 1:slices
+for g = slice
     %for g = 4
     strcat(['splitting frame ', num2str(g), ' ... '])
     
-    objects = ones(size(part1(g).All));
+    objects = part1(g).Objects;
     objects2 = zeros(size(objects));
-    split_round = 0;
     non_single = part1(g).Non_Single;
-    while sum(sum(objects ~= objects2)) > 0  && split_round < 1
+    
+    
+    I2 = part1(g).All;
         
-        split_round = split_round + 1;
+    for i = non_single
         
-        if split_round == 1
-            objects = part1(g).Objects;
-            I2 = part1(g).All;
-        else
-            objects = part2(g).Objects;
-            I2 = part2(g).All;
+        if i > length(part1(g).Probability)
+            continue
         end
         
-        for i = non_single
-            
-            if i > length(part1(g).Probability)
-                continue
-            end
-            
-            clear edge_temp bound_temp
-            [split_im,~] = concave_split(objects,i,pix_size,ee_thresh);
-            new_num = max(max(bwlabel(split_im,4)));
-            
-            for new_i = 1:new_num
-                
-                split_im_temp = bwlabel(split_im,4);
-                
-                [ellipse1,test1] = ellipseError(split_im_temp,new_i);
-                if isempty(ellipse1) == 1 || isempty(test1) == 1
-                    ellipse_error(new_i) = 2;
-                    [split_im1,~] = concave_split(split_im_temp,new_i,pix_size,ee_thresh);
-                    split_im(split_im_temp == new_i) = 0;
-                    split_im = split_im + split_im1;
-                else
-                    ellipse_error(new_i) = ellipseTest(ellipse1,test1,cellArea(split_im_temp,new_i,pix_size),pix_size);
-                    
-                    [edge_temp,bound_temp,con_peaks] = edgeOptimize(split_im_temp,new_i);
-                    
-                    if (ellipse_error(new_i) > ee_thresh && max(bound_temp{1,1}(:,4)) > .2) || (con_peaks > 0)
-                        [split_im1,~] = concave_split(split_im_temp,new_i,pix_size,ee_thresh);
-                        split_im(split_im_temp == new_i) = 0;
-                        split_im = split_im + split_im1;
-                    end
-                end
-                
-                
-            end
-            
-            I2(objects == i) = 0;
-            I2 = I2 + split_im;
-            
-        end
+        clear edge_temp bound_temp
+        [split_im,~] = concave_split(objects,i,pix_size,ee_thresh);
+        I2(objects == i) = 0;
+        I2 = I2 + split_im;
         
         objects2 = bwlabel(smallID(bwlabel(I2,4)),4);
         num = max(objects2(:));
@@ -261,7 +226,6 @@ for g = 1:slices
                 objects2(objects2==i) = 0;
             end
         end
-        
         
         objects2 = bwlabel(objects2,4);
         num = max(objects2(:));
@@ -330,37 +294,27 @@ for g = 1:slices
         end
         
         for i = 1:num
-            
             [ellipse1,test1] = ellipseError(objects2,i);
-            
             if isempty(ellipse1) == 1 || isempty(test1) == 1
                 ellipse_error(i) = ee_thresh+1;
                 continue
             else
                 test_ellipse(i) = test1;
                 ellipse_error(i) = ellipseTest(ellipse1,test1,area(i),pix_size);
-                
             end
         end
         
         centers=zeros(max(objects2(:)),2);
         
         for i=1:num
-            
             centers(i,:) = cellCenter(objects2,i);
-            
         end
-        
-        %Calculate Areas of connected objects. Not exactly just adding up
-        %pixels. Also takes into account surrounding pixels
         
         ellipticity = zeros(num,4);
         
         % Re-done Ellipticity Calculation
         for i=1:num
-            
             ellipticity(i,:) = cellEllipse(objects2,i);
-            
         end
         
         ellipticity = [ellipticity ellipticity];
@@ -1065,6 +1019,5 @@ for i = 1:index
     end
     
 end
-
 
 
