@@ -38,40 +38,38 @@ for i = id
         l = length(new_bounds{1,1}(:,1));
         for j = 1:l
             p1 = new_bounds{1,1}(j,:);
-            if j == 1
-                p_minus1 = new_bounds{1,1}(l,:);
+            if j == 1 || j == 2
+                p_minus1 = new_bounds{1,1}(l-2,:);
             else
                 p_minus1 = new_bounds{1,1}(mod(j-1,l),:);
             end
             
-            if j == l-1
-                p_plus1 = new_bounds{1,1}(l,:);
+            if j == l-1 || j == l-2
+                p_plus1 = new_bounds{1,1}(1,:);
             else
                 p_plus1 = new_bounds{1,1}(mod(j+1,l),:);
             end
             
-            if j == 2
-                p_minus2 = new_bounds{1,1}(l,:);
+            if j == 1 || j == 2
+                p_minus2 = new_bounds{1,1}(l-2,:);
             else
                 p_minus2 = new_bounds{1,1}(mod(j-2,l),:);
             end
             
             if j == l-2
-                p_plus2 = new_bounds{1,1}(l,:);
+                p_plus2 = new_bounds{1,1}(1,:);
             else
                 p_plus2 = new_bounds{1,1}(mod(j+2,l),:);
             end
             
             new_bounds{1,1}(j,3) = calcNormal(p_minus1([1,2]),p_plus1([1,2]));
-            
-            
         end
         
         for j = 1:l
         %for j = 36
             p1 = new_bounds{1,1}(j,:);
-            if j == 1
-                p_minus1 = new_bounds{1,1}(l,:);
+            if j == 1 || j == 2
+                p_minus1 = new_bounds{1,1}(l-2,:);
             else
                 p_minus1 = new_bounds{1,1}(j-1,:);
             end
@@ -107,7 +105,7 @@ for i = id
         
         new_bounds{1,1}(:,4) = smooth(new_bounds{1,1}(:,4),3);
         cave_points = new_bounds{1,1}(:,4);
-        cave_points(cave_points<=0) = 0;
+        cave_points(cave_points<=0.1) = 0;
         [peaks,~] = findpeaks(cave_points);
         peaks = length(peaks);
         
