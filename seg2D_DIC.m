@@ -1,14 +1,13 @@
-
 clear all
 clc
 
-ref_slice_i = [7,9,5,6];
-for cell_num = [1,2,4];
-filename = strcat(['ptsG_gfp_plus_t20_sample_00',num2str(cell_num),'_9717','.mat']);
+
+for cell_num = 1;
+filename = strcat(['ptsG_gfp_plus_t20_sample_00',num2str(cell_num),'.mat']);
 
 dim  = 2;%input('Number of D''s (2/3) : ');
 ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
-ref_slice = ref_slice_i(cell_num);
+ref_slice = 5; % Change this to the most in-focus slice
 slices2D = 2; % How many frames above and below reference frame (e.g. 4 = reference frame +/- 4 frames)
 pix_size = .130; %Microns
 
@@ -19,8 +18,8 @@ shape3D_thresh = 2;
 concavity_thresh = .3;
 background_thresh = .1;
 pix_neigh = 8; %floor((.08/pix_size)*12); <- If you have no idea, try this
-volume_thresh = 200;
-slice_thresh = 3;
+volume_thresh = 40 * (2*slices2D + 1);
+slice_thresh = slices2D + 1;
 zangle_thresh = 1;
 dist_thresh = 4;
 low_pass_check = 0; % 1 = on. Change to 0 if you want to turn it off
