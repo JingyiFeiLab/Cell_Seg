@@ -64,8 +64,8 @@ for g = slice
     I3(:,:,g) = stack2(:,:,g)-I_low_pass;
 end
 
-%for g = slice
-for g = 18
+for g = slice
+%for g = 18
     strcat(['Working on Frame ' , num2str(g), ' ... '])
     stack3 = I3(:,:,g)./max(I3(:));
     a(:,:,g) = imdilate(imerode(bradley(stack3,[pix_neigh,pix_neigh],int_thresh),se),se);
