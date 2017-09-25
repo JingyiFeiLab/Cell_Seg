@@ -8,7 +8,7 @@ ref_slice = 5;
 slices2D = 2; % How many frames above and below reference frame (e.g. 4 = reference frame +/- 4 frames)
 pix_size = .130; %Microns
 
-int_thresh = .000001; % Intensity Threshold
+int_thresh = .0001; % Intensity Threshold
 convolve_thresh = .05; % Threshold for Voxels to include in Convolved data
 ee_thresh = 1.22;  % <--- Splitting threshold, you can change this
 shape3D_thresh = 2;
@@ -54,7 +54,6 @@ for g = slice
 
     stack2(:,:,g) = anisodiff2D(stack_o(:,:,g),1,1/7,30,1);
     I=stack_o(:,:,g);
-    [r,c] = size(I);
     I2 = stack2(:,:,g);
     if dim == 2
         I_low_pass = low_pass(I2,.025);
@@ -68,6 +67,7 @@ for g = slice
 %for g = 18
     strcat(['Working on Frame ' , num2str(g), ' ... '])
     stack3 = I3(:,:,g)./max(I3(:));
+    [r,c] = size(stack3);
     a(:,:,g) = imdilate(imerode(bradley(stack3,[pix_neigh,pix_neigh],int_thresh),se),se);
     b = bwlabel(a(:,:,g),4);
     a_temp = a(:,:,g);
