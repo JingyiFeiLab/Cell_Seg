@@ -8,14 +8,14 @@ ref_slice = 5;
 slices2D = 2; % How many frames above and below reference frame (e.g. 4 = reference frame +/- 4 frames)
 pix_size = .130; %Microns
 
-int_thresh = .0001; % Intensity Threshold
+int_thresh = .00001; % Intensity Threshold
 convolve_thresh = .05; % Threshold for Voxels to include in Convolved data
 ee_thresh = 1.22;  % <--- Splitting threshold, you can change this
 shape3D_thresh = 2;
 concavity_thresh = .3;
 background_thresh = .25;
 pix_neigh = 11; %floor((.08/pix_size)*12); <- If you have no idea, try this
-volume_thresh = 500;
+volume_thresh = 200;
 slice_thresh = 3;
 zangle_thresh = 1;
 dist_thresh = 4;
@@ -166,7 +166,7 @@ for g = slice
     part1(g).Probability = ellipse_error;
     part1(g).Mask = mask;
     part1(g).All = BW;
-    part1(g).Original = I;
+    part1(g).Original = stack_o(:,:,g);
     part1(g).Background = I_low_pass;
     part1(g).Non_Single = non_single;
     
