@@ -7,7 +7,7 @@ TotalShape = struct(field1, [], field2, [], field3, []);
 num_cells = 1;
 
 for sim_round = 1:num_cells
-    clearvars -except TotalShape sim_round
+    clearvars -except TotalShape sim_round num_cells
     dim  = 3;%input('Number of D''s (2/3) : ');
     ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
     ref_slice = 5;
@@ -842,7 +842,7 @@ for sim_round = 1:num_cells
 end
 
 %%
-cells = [1:4,6:24];
+cells = 1:num_cells;
 shape3D = [];
 shape2d = [];
 concavity = [];
