@@ -1,6 +1,8 @@
 function [part3,part4,total_cells] = fixOption(part1,part2,slice,dim,ee_thresh,shape3D_thresh,volume_thresh,slice_thresh,zangle_thresh,dist_thresh,gap_thresh,slices,stack2,stack_o,stack_back,stack_blue,stack_red,stack_green,blue_back,green_back,red_back)
 clearvars part3 part4 total_cells
 I = zeros(size(part1(1).Original));
+xdim = size(I,1);
+ydim = size(I,2);
 
 se = [1 1 1; 1 1 1 ; 1 1 1];
 pix_size = .130;
