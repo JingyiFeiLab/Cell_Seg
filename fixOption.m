@@ -66,9 +66,8 @@ for g = slice
         
         
         %f2 = figure(2);imshow(IRGB);title('Pick False Positives (Positive Selections Colored in Blue). Up Key = Zoom in, Down Key = Zoom Out, Click to Select, Press Enter When Done')
-        f2 = figure(2);imshow(IRGB);title({'Press "d" to delete selections , Press "w"  to manually draw border (USE CROSSHAIRS TO PICK CELL)'...
-                                           'Press "Enter" when Finished' }) %. Up Key = Zoom in, Down Key = Zoom Out, Click to Select, Press Enter When Done')
-        
+        f2 = figure(2);imshow(IRGB);imshow(IRGB);title({'Press "d" to delete selections , Press "w"  to manually draw border (Click Mouse, Hold, And Drag to draw border. Release)'...
+                                                 'Press "Enter" when Finished' })
         set(f2,'Position',[495 777 597 529]) % Three Monitor Setup
         %set(f2,'Position', [264 770 597 529]) % Me
         %set(f2,'Position', [637 215 560 420]) % Jingyi

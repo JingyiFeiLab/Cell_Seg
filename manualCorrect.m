@@ -124,7 +124,7 @@ while 0<1
         IR(bwperim(non_mask)) = 100;
         
         IRGB = cat(3,IR,IG,IB);
-        imshow(IRGB);title({'Press "d" to delete selections , Press "w"  to manually draw border (USE CROSSHAIRS TO PICK CELL)'...
+        imshow(IRGB);title({'Press "d" to delete selections , Press "w"  to manually draw border (Click Mouse, Hold, And Drag to draw border. Release)'...
                              'Press "Enter" when Finished' })
                          
         set(figure,'Position',p)
@@ -241,7 +241,7 @@ while 0<1
         IR(bwperim(non_mask)) = 100;
         
         IRGB = cat(3,IR,IG,IB);
-        imshow(IRGB);title({'Press "d" to delete selections , Press "w"  to manually draw border (USE CROSSHAIRS TO PICK CELL)'...
+        imshow(IRGB);title({'Press "d" to delete selections , Press "w"  to manually draw border (Click Mouse, Hold, And Drag to draw border. Release)'...
                              'Press "Enter" when Finished' })
                                       
         set(figure,'Position',p)
