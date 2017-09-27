@@ -212,7 +212,7 @@ for g = slice
         end
         
         clear edge_temp bound_temp
-        [split_im,~] = concave_split(objects,i,pix_size,ee_thresh);
+        split_im = concave_split(objects,i,pix_size,ee_thresh);
         I2(objects == i) = 0;
         I2 = I2 + split_im;
     end
