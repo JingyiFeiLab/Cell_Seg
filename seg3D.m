@@ -218,52 +218,31 @@ for g = slice
     end
         
     objects2 = bwlabel(smallID(bwlabel(I2,4)),4);
-    num = max(objects2(:));
     
-    
-    for i = 1:num
-        [~,~,con_peaks] = edgeOptimize(objects2,i);
-        if con_peaks>=3
-            objects2(objects2==i) = 0;
-        end
-    end
-    
-    objects2 = bwlabel(objects2,4);
-    num = max(objects2(:));
-    
-    for i = 1:num
-        if sum(sum(((objects2==i).*stack2(:,:,g))))/cellArea(objects2,i) < background_thresh
-            BW(objects2 == i) = 0;
-            objects2(objects2 == i) = 0;
-            
-        end
-    end
-    
-    objects2 = bwlabel(objects2,4);
     num = max(objects2(:));
     
     clear centers area ellipticity
     
     ellipse_error = zeros(num,1);
     test_ellipse = {};
-    
-    for i = 1:num
-        
-        [ellipse1,test1] = ellipseError(objects2,i);
-        
-        if isempty(ellipse1) == 1 || isempty(test1) == 1
-            ellipse_error(i) = ee_thresh+1;
-            continue
-        else
-            test_ellipse(i) = test1;
-            ellipse_error(i) = ellipseTest(ellipse1,test1,cellArea(objects2,i,pix_size),pix_size);
+   
+    for round_id = 1:2
+        for i = 1:num
             
+            [ellipse1,test1] = ellipseError(objects2,i);
+            
+            if isempty(ellipse1) == 1 || isempty(test1) == 1
+                ellipse_error(i) = ee_thresh+1;
+                continue
+            else
+                test_ellipse(i) = test1;
+                ellipse_error(i) = ellipseTest(ellipse1,test1,cellArea(objects2,i,pix_size),pix_size);
+                
+            end
         end
-    end
-    
-    for i = 1:num
         
-        if ellipse_error(i) < ee_thresh
+        for i = 1:num
+            
             objects2(objects2==i) = 0;
             object_temp = zeros(size(objects2));
             for l = 1:length(test_ellipse{i})
@@ -272,37 +251,24 @@ for g = slice
             object_temp = imfill(object_temp);
             objects2(object_temp == i) = i;
             objects2 = smallID(imfill(objects2));
-        else
-            objects2(objects2==i) = 0;
+            
         end
+        
+        uni_obs = unique(objects2);
+        for numb = 1:length(unique(objects2))-1
+            objects2(objects2 == uni_obs(numb+1)) = numb;
+        end
+        num = max(objects2(:));
     end
-    
-    uni_obs = unique(objects2);
-    for numb = 1:length(unique(objects2))-1
-        objects2(objects2 == uni_obs(numb+1)) = numb;
-    end
-    num = max(objects2(:));
     
     clear centers area ellipticity
     
-    ellipse_error = zeros(num,1);
-    test_ellipse = {};
+  
     
     area=zeros(num,1);
     
     for i=1:num
         area(i) = cellArea(objects2,i,pix_size);
-    end
-    
-    for i = 1:num
-        [ellipse1,test1] = ellipseError(objects2,i);
-        if isempty(ellipse1) == 1 || isempty(test1) == 1
-            ellipse_error(i) = ee_thresh+1;
-            continue
-        else
-            test_ellipse(i) = test1;
-            ellipse_error(i) = ellipseTest(ellipse1,test1,area(i),pix_size);
-        end
     end
     
     centers=zeros(max(objects2(:)),2);
@@ -320,7 +286,7 @@ for g = slice
     
     ellipticity = [ellipticity ellipticity];
     
-    mask = smallID(I2);
+    
     cell_labels = zeros(num,1);
     q = 1; %Non-Single Cells
     r = 1; % Single Cells

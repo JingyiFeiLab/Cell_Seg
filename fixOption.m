@@ -10,14 +10,14 @@ pix_size = .130;
 field1 = 'Stack_Number';
 field2 = 'Objects'; % All Objects, single and multi, labeled
 field3 = 'Center';
-field4 = 'Weighted_Center';
-field5 = 'Area';
-field6 = 'Ellipticity';
-field7 = 'Cell_Labels';
-field8 = 'Probability';
-field9 = 'All'; %All Objects, single and multi
-field10 = 'Boundaries';
-part3 = struct(field1, [] , field2, [], field3, [], field4, [], field5, [], field6, [], field7, [], field8, [], field9, [], field10, []); % , field14, [], field15, []); %Table for Part 1
+field4 = 'Area';
+field5 = 'Ellipticity';
+field6 = 'Cell_Labels';
+field7 = 'Probability';
+field8 = 'Mask'; % Single Cell Selections
+field9 = 'All'; % All Objects, single and multi
+
+part3 = struct(field1, [] , field2, [], field3, [], field4, [], field5, [], field6, [], field7, [], field8, [], field9, []); %Table for Part 2
 
 for g = slice
 %for g = 15:16
@@ -48,7 +48,8 @@ for g = slice
     split_more = input(prompt1, 's');
     
     if split_more == 'y'
-        objects = part2(g).Objects;
+        part3(g) = part2(g);
+        continue
     
     elseif split_more == 'n'
         

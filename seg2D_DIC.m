@@ -3,7 +3,7 @@ clc
 
 
 for cell_num = 1;
-filename = strcat(['ptsG_gfp_plus_t20_sample_00',num2str(cell_num),'.mat']);
+%filename = strcat(['ptsG_gfp_plus_t20_sample_00',num2str(cell_num),'.mat']);
 
 dim  = 2;%input('Number of D''s (2/3) : ');
 ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
@@ -197,213 +197,160 @@ part2 = struct(field1, [] , field2, [], field3, [], field4, [], field5, [], fiel
 
 split = cell(1,slices);
 for g = slice
-    %for g = 4
     strcat(['splitting frame ', num2str(g), ' ... '])
     
-    objects = ones(size(part1(g).All));
+    objects = part1(g).Objects;
     objects2 = zeros(size(objects));
-    split_round = 0;
     non_single = part1(g).Non_Single;
-    while sum(sum(objects ~= objects2)) > 0  && split_round < 1
+    
+    
+    I2 = part1(g).All;
         
-        split_round = split_round + 1;
+    for i = non_single(9:19)
         
-        if split_round == 1
-            objects = part1(g).Objects;
-            I2 = part1(g).All;
-        else
-            objects = part2(g).Objects;
-            I2 = part2(g).All;
+        strcat(['splitting cell ', num2str(i), ' ... '])
+        if i > length(part1(g).Probability)
+            continue
         end
         
-        for i = non_single
-            
-            if i > length(part1(g).Probability)
-                continue
-            end
-            
-            clear edge_temp bound_temp
-            [split_im,~] = concave_split(objects,i,pix_size,ee_thresh);
-            new_num = max(max(bwlabel(split_im,4)));
-            
-            for new_i = 1:new_num
-                
-                split_im_temp = bwlabel(split_im,4);
-                
-                [ellipse1,test1] = ellipseError(split_im_temp,new_i);
-                if isempty(ellipse1) == 1 || isempty(test1) == 1
-                    ellipse_error(new_i) = 2;
-                    [split_im1,~] = concave_split(split_im_temp,new_i,pix_size,ee_thresh);
-                    split_im(split_im_temp == new_i) = 0;
-                    split_im = split_im + split_im1;
-                else
-                    ellipse_error(new_i) = ellipseTest(ellipse1,test1,cellArea(split_im_temp,new_i,pix_size),pix_size);
-                    
-                    [edge_temp,bound_temp,con_peaks] = edgeOptimize(split_im_temp,new_i);
-                    
-                    if (ellipse_error(new_i) > ee_thresh && max(bound_temp{1,1}(:,4)) > .2) || (con_peaks > 0)
-                        [split_im1,~] = concave_split(split_im_temp,new_i,pix_size,ee_thresh);
-                        split_im(split_im_temp == new_i) = 0;
-                        split_im = split_im + split_im1;
-                    end
-                end
-                
-                
-            end
-            
-            I2(objects == i) = 0;
-            I2 = I2 + split_im;
-            
+        clear edge_temp bound_temp
+        split_im = concave_split(objects,i,pix_size,ee_thresh);
+        I2(objects == i) = 0;
+        I2 = I2 + split_im;
+    end
+        
+    objects2 = bwlabel(smallID(bwlabel(I2,4)),4);
+    num = max(objects2(:));
+    
+    
+    for i = 1:num
+        [~,~,con_peaks] = edgeOptimize(objects2,i);
+        if con_peaks>=3
+            objects2(objects2==i) = 0;
         end
-        
-        objects2 = bwlabel(smallID(bwlabel(I2,4)),4);
-        num = max(objects2(:));
-        
-        
-        for i = 1:num
-            [~,~,con_peaks] = edgeOptimize(objects2,i);
-            if con_peaks>=3
-                objects2(objects2==i) = 0;
-            end
-        end
-        
-        objects2 = bwareaopen(objects2,50);
-        objects2 = bwlabel(objects2,4);
-        num = max(objects2(:));
-        
-        for i = 1:num
-            if sum(sum(((objects2==i).*stack2(:,:,g))))/cellArea(objects2,i) < background_thresh
-                BW(objects2 == i) = 0;
-                objects2(objects2 == i) = 0;
-                
-            end
-        end
-        
-        objects2 = bwlabel(objects2,4);
-        num = max(objects2(:));
-        
-        clear centers area ellipticity
-        
-        ellipse_error = zeros(num,1);
-        test_ellipse = {};
-        
-        for i = 1:num
-            
-            [ellipse1,test1] = ellipseError(objects2,i);
-            
-            if isempty(ellipse1) == 1 || isempty(test1) == 1
-                ellipse_error(i) = ee_thresh+1;
-                continue
-            else
-                test_ellipse(i) = test1;
-                ellipse_error(i) = ellipseTest(ellipse1,test1,cellArea(objects2,i,pix_size),pix_size);
-                
-            end
-        end
-        
-        for i = 1:num
-            
-            if ellipse_error(i) < ee_thresh
-                objects2(objects2==i) = 0;
-                object_temp = zeros(size(objects2));
-                for l = 1:length(test_ellipse{i})
-                    object_temp(test_ellipse{i}(l,1),test_ellipse{i}(l,2)) = i;
-                end
-                object_temp = imfill(object_temp);
-                objects2(object_temp == i) = i;
-                objects2 = smallID(imfill(objects2));
-            else
-                objects2(objects2==i) = 0;
-            end
-        end
-        
-        uni_obs = unique(objects2);
-        for numb = 1:length(unique(objects2))-1
-            objects2(objects2 == uni_obs(numb+1)) = numb;
-        end
-        num = max(objects2(:));
-        
-        clear centers area ellipticity
-        
-        ellipse_error = zeros(num,1);
-        test_ellipse = {};
-        
-        area=zeros(num,1);
-        
-        for i=1:num
-            area(i) = cellArea(objects2,i,pix_size);
-        end
-        
-        for i = 1:num
-            
-            [ellipse1,test1] = ellipseError(objects2,i);
-            
-            if isempty(ellipse1) == 1 || isempty(test1) == 1
-                ellipse_error(i) = ee_thresh+1;
-                continue
-            else
-                test_ellipse(i) = test1;
-                ellipse_error(i) = ellipseTest(ellipse1,test1,area(i),pix_size);
-                
-            end
-        end
-        
-        centers=zeros(max(objects2(:)),2);
-        
-        for i=1:num
-            
-            centers(i,:) = cellCenter(objects2,i);
-            
-        end
-        
-        %Calculate Areas of connected objects. Not exactly just adding up
-        %pixels. Also takes into account surrounding pixels
-        
-        ellipticity = zeros(num,4);
-        
-        % Re-done Ellipticity Calculation
-        for i=1:num
-            
-            ellipticity(i,:) = cellEllipse(objects2,i);
-            
-        end
-        
-        ellipticity = [ellipticity ellipticity];
-        
-        mask = smallID(I2);
-        cell_labels = zeros(num,1);
-        q = 1; %Non-Single Cells
-        r = 1; % Single Cells
-        
-        
-        %Single Cell Prediction
-        for i = 1:num
-            if ellipse_error(i) >= ee_thresh %  Non - Single Cells hopefully
-                ellipticity(i,5:8) = NaN;
-                mask(objects2 == i) = 0;
-                cell_labels(i) = 1000*(2*g)+q;
-                q = q+1;
-            else
-                
-                cell_labels(i) = 1000*(2*g-1) + r;
-                r = r+1;
-            end
-        end
-        
-        part2(g).Stack_Number = g;
-        part2(g).Cell_Labels = cell_labels;
-        part2(g).Area = area ;
-        part2(g).Objects = objects2;
-        part2(g).Center = centers;
-        part2(g).Ellipticity = ellipticity;
-        part2(g).Probability = ellipse_error;
-        part2(g).Mask = mask;
-        part2(g).All = I2;
-        
-        
     end
     
+    objects2 = bwlabel(objects2,4);
+    num = max(objects2(:));
     
+    for i = 1:num
+        if sum(sum(((objects2==i).*stack2(:,:,g))))/cellArea(objects2,i) < background_thresh
+            BW(objects2 == i) = 0;
+            objects2(objects2 == i) = 0;
+            
+        end
+    end
+    
+    objects2 = bwlabel(objects2,4);
+    num = max(objects2(:));
+    
+    clear centers area ellipticity
+    
+    ellipse_error = zeros(num,1);
+    test_ellipse = {};
+    
+    for i = 1:num
+        
+        [ellipse1,test1] = ellipseError(objects2,i);
+        
+        if isempty(ellipse1) == 1 || isempty(test1) == 1
+            ellipse_error(i) = ee_thresh+1;
+            continue
+        else
+            test_ellipse(i) = test1;
+            ellipse_error(i) = ellipseTest(ellipse1,test1,cellArea(objects2,i,pix_size),pix_size);
+            
+        end
+    end
+    
+    for i = 1:num
+        
+        if ellipse_error(i) < ee_thresh
+            objects2(objects2==i) = 0;
+            object_temp = zeros(size(objects2));
+            for l = 1:length(test_ellipse{i})
+                object_temp(test_ellipse{i}(l,1),test_ellipse{i}(l,2)) = i;
+            end
+            object_temp = imfill(object_temp);
+            objects2(object_temp == i) = i;
+            objects2 = smallID(imfill(objects2));
+        else
+            objects2(objects2==i) = 0;
+        end
+    end
+    
+    uni_obs = unique(objects2);
+    for numb = 1:length(unique(objects2))-1
+        objects2(objects2 == uni_obs(numb+1)) = numb;
+    end
+    num = max(objects2(:));
+    
+    clear centers area ellipticity
+    
+    ellipse_error = zeros(num,1);
+    test_ellipse = {};
+    
+    area=zeros(num,1);
+    
+    for i=1:num
+        area(i) = cellArea(objects2,i,pix_size);
+    end
+    
+    for i = 1:num
+        [ellipse1,test1] = ellipseError(objects2,i);
+        if isempty(ellipse1) == 1 || isempty(test1) == 1
+            ellipse_error(i) = ee_thresh+1;
+            continue
+        else
+            test_ellipse(i) = test1;
+            ellipse_error(i) = ellipseTest(ellipse1,test1,area(i),pix_size);
+        end
+    end
+    
+    centers=zeros(max(objects2(:)),2);
+    
+    for i=1:num
+        centers(i,:) = cellCenter(objects2,i);
+    end
+    
+    ellipticity = zeros(num,4);
+    
+    % Re-done Ellipticity Calculation
+    for i=1:num
+        ellipticity(i,:) = cellEllipse(objects2,i);
+    end
+    
+    ellipticity = [ellipticity ellipticity];
+    
+    mask = smallID(I2);
+    cell_labels = zeros(num,1);
+    q = 1; %Non-Single Cells
+    r = 1; % Single Cells
+    
+    
+    %Single Cell Prediction
+    for i = 1:num
+        if ellipse_error(i) >= ee_thresh %  Non - Single Cells hopefully
+            ellipticity(i,5:8) = NaN;
+            mask(objects2 == i) = 0;
+            cell_labels(i) = 1000*(2*g)+q;
+            q = q+1;
+        else
+            
+            cell_labels(i) = 1000*(2*g-1) + r;
+            r = r+1;
+        end
+    end
+    
+    part2(g).Stack_Number = g;
+    part2(g).Cell_Labels = cell_labels;
+    part2(g).Area = area ;
+    part2(g).Objects = objects2;
+    part2(g).Center = centers;
+    part2(g).Ellipticity = ellipticity;
+    part2(g).Probability = ellipse_error;
+    part2(g).Mask = mask;
+    part2(g).All = I2;
     clear cells
     
 end
@@ -1071,5 +1018,5 @@ for i = 1:index
     
 end
 
-save(filename);
+%save(filename);
 end

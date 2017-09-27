@@ -1,4 +1,4 @@
-function [split_im, split_lines] = concaveSplit(BW, id, pix_size,ee_thresh);
+function [split_im] = concaveSplit(BW, id, pix_size,ee_thresh);
 
 % INPUT : BW = Labeled BW image
 % OUTPUT : split_im = Image with Non-Single Cells split at concave points
@@ -21,14 +21,11 @@ for i = id
     cave_points(cave_points<=0.1) = 0;
     [peaks,locs] = findpeaks(cave_points);
     max_cave = [peaks, locs];
-%     for i = 1:length(max_cave)
-%         max_cave(i,2) = max_cave(i,2)-1;
-%         if max_cave(i,2) == 0
-%             max_cave(i,2) = length(bounds{i,1});
-%         end
-%     end
     
-    if length(max_cave(:,1)) < 2 | size(max_cave) == [0,0];
+
+    
+    if length(max_cave(:,1)) < 1 | size(max_cave) == [0,0];
+        split_im = object;
         break
     end
     [~,order] = sort(max_cave(:,1),'descend');
@@ -39,6 +36,10 @@ for i = id
     
     for j = 1:num_cave-1
         for k = j+1:num_cave
+            
+            if num_cave == 1
+                break
+            end
             
             x_concave = [reg_bounds{1,1}(max_cave(j,2),2),reg_bounds{1,1}(max_cave(k,2),2)];
             y_concave = [reg_bounds{1,1}(max_cave(j,2),1),reg_bounds{1,1}(max_cave(k,2),1)];
@@ -120,7 +121,7 @@ for i = id
     split_lines = split_lines(~cellfun('isempty',split_lines));
     split_num = length(split_lines) + 1;
     
-    if max(max_cave(:,1)) > .35 && sum(max_cave(:,1)>.15) < 2 || max(max_cave(:,1)) > .5
+    if max(max_cave(:,1)) > .35 && sum(max_cave(:,1)>.15) < 2 || max(max_cave(:,1)) > .5 
         
         x_concave = reg_bounds{1,1}(max_cave(1,2),2);
         y_concave = reg_bounds{1,1}(max_cave(1,2),1);
