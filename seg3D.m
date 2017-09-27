@@ -225,7 +225,8 @@ for g = slice
     
     ellipse_error = zeros(num,1);
     test_ellipse = {};
-   
+    mask = objects2;
+    
     for round_id = 1:2
         for i = 1:num
             
