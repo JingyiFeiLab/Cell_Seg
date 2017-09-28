@@ -4,10 +4,11 @@ field1 = 'part1';
 field2 = 'cell_angles';
 field3 = 'Concavity';
 TotalShape = struct(field1, [], field2, [], field3, []);
-num_cells = 3;
+first_cell_id = 1; % Number = what is your first file labeled as?
+num_cells = 1; % How many folders do you have?
 
-for sim_round = 3:num_cells
-    clearvars -except TotalShape sim_round num_cells
+for sim_round = first_cell_id:(first_cell_id-1+num_cells)
+    clearvars -except TotalShape sim_round num_cells first_cell_id
     dim  = 3;%input('Number of D''s (2/3) : ');
     ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
     ref_slice = 5;
@@ -30,7 +31,7 @@ for sim_round = 3:num_cells
     
     % Path to main file (i.e. channel) that you will use for segmentation
     %filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/September_3_2017_convert/manX_gfp_no_plasmid/t20/sample',num2str(cell_num)]);
-    filepath = strcat(['D:\For_Seongjin\Cell_Seg-master_4\cell', num2str(sim_round)]);
+    filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/cell', num2str(sim_round)]);
     
     
     [slice, stack_o, stack_red, stack_green, stack_blue, stack_back, slices, red_back, green_back, blue_back] = imFormat(filepath,ref_channel,dim,ref_slice,slices2D);
@@ -842,7 +843,7 @@ for sim_round = 3:num_cells
 end
 
 %%
-cells = 3:num_cells;
+cells = first_cell_id:(first_cell_id-1+num_cells);
 shape3D = [];
 shape2d = [];
 concavity = [];
@@ -850,13 +851,13 @@ slices = [];
 volume = [];
 dist_thresh = [];
 zangle = [];
-field1 = 'shape2D';
-field2 = 'Concavity';
-field3 = 'Dcenter';
-field4 = 'shape3D';
-field5 = 'Zangle';
-field6 = 'Volume';
-field7 = 'Slices';
+field1 = 'shape2D_thresh';
+field2 = 'Conc';
+field3 = 'Dist_thresh';
+field4 = 'shape3D_thresh';
+field5 = 'Zangle_thresh';
+field6 = 'Volume_thresh';
+field7 = 'Slice_thresh';
 FinalStruct = struct(field1, [], field2, [], field3, [], field4, [], field5, [], field6, [], field7, []);
 
 for i = cells
