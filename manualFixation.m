@@ -1,1 +1,1 @@
-[part3,part4,total_cells] = fixOption(part1,part2,slice,dim,ee_thresh,shape3D_thresh,volume_thresh,slice_thresh,zangle_thresh,dist_thresh,gap_thresh,slices,stack2,stack_o,stack_back,stack_blue,stack_red,stack_green,blue_back,green_back,red_back);
+[part3,part4,total_cells] = fixOption(part1,part2,slice,dim,shape2D_thresh,shape3D_thresh,volume_thresh,slice_thresh,zangle_thresh,dist_thresh,gap_thresh,slices,stack2,stack_o,stack_back,stack_blue,stack_red,stack_green,blue_back,green_back,red_back,slices2D);

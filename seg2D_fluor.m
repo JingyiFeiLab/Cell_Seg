@@ -27,15 +27,9 @@ gap_thresh = 5;
 
 % Path to main file (i.e. channel) that you will use for segmentation
 filepath = strcat(['D:\For_Seongjin\Cell_Seg-master_4\sample',num2str(cell_num)]);
-filepath_dic = strcat(['D:\For_Seongjin\Cell_Seg-master_4\sample1\New_folder\+SgrS_t=0_DIC',num2str(cell_num),'.tif']);
-%
-%filepath = '/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/1_14_17_invasion_converted/0hr/wt_sopE_G1_crop';
 
 
 [slice, stack_o, stack_red, stack_green, stack_blue, stack_back, slices, red_back, green_back, blue_back] = imFormat(filepath,ref_channel,dim,ref_slice,slices2D);
-for ig = 1:size(stack_o,3)
-    stack_o(:,:,ig) = mat2gray(imread(filepath_dic));
-end
 
 
 se = [1 1 1; 1 1 1 ; 1 1 1]; % Structuring Element for basic Erosion and dilation

@@ -1,4 +1,4 @@
-function [part3,part4,total_cells] = fixOption(part1,part2,slice,dim,ee_thresh,shape3D_thresh,volume_thresh,slice_thresh,zangle_thresh,dist_thresh,gap_thresh,slices,stack2,stack_o,stack_back,stack_blue,stack_red,stack_green,blue_back,green_back,red_back)
+function [part3,part4,total_cells] = fixOption(part1,part2,slice,dim,shape2D_thresh,shape3D_thresh,volume_thresh,slice_thresh,zangle_thresh,dist_thresh,gap_thresh,slices,stack2,stack_o,stack_back,stack_blue,stack_red,stack_green,blue_back,green_back,red_back,slices2D)
 clearvars part3 part4 total_cells
 I = zeros(size(part1(1).Original));
 xdim = size(I,1);
@@ -88,7 +88,8 @@ for g = slice
         
     end
     
-    objects2 = objects;
+    %objects2 = objects;
+    objects2 = smallID(objects);
     num = max(objects2(:));
     
     clear centers area ellipticity
@@ -102,7 +103,7 @@ for g = slice
         [ellipse1,test1] = ellipseError(objects2,i);
         
         if isempty(ellipse1) == 1 || isempty(test1) == 1
-            ellipse_error(i) = ee_thresh+1;
+            ellipse_error(i) = shape2D_thresh+1;
             continue
         else
             test_ellipse(i) = test1;
@@ -163,7 +164,7 @@ for g = slice
     
     %Single Cell Prediction
     for i = 1:num
-        if ellipse_error(i) >= ee_thresh %  Non - Single Cells hopefully
+        if ellipse_error(i) >= shape2D_thresh %  Non - Single Cells hopefully
             ellipticity(i,5:8) = NaN;
             mask(objects2 == i) = 0;
             cell_labels(i) = 1000*(2*g)+q;
@@ -197,7 +198,7 @@ if dim == 3
         
         for i= 1:length(part3(g).Area(:,1))    % i = Id'd cell (single or not) in Frame g
             
-            if part3(g).Probability(i) > ee_thresh
+            if part3(g).Probability(i) > shape2D_thresh
                 continue
             end
             
@@ -219,7 +220,7 @@ if dim == 3
             cell_distances = 1000*ones(length(part3(g+1).Area(:,1)),2);
             for j = 1:length(part3(g+1).Area(:,1))
                 
-                if part3(g+1).Probability(j) > ee_thresh
+                if part3(g+1).Probability(j) > shape2D_thresh
                     continue
                 end
                 
@@ -271,7 +272,7 @@ if dim == 3
                     cell_distances2 = 1000*ones(length(part3(g+2).Area(:,1)),2);
                     for k = 1:length(part3(g+2).Area(:,1))
                         
-                        if part3(g+2).Probability(k) > ee_thresh
+                        if part3(g+2).Probability(k) > shape2D_thresh
                             continue
                         end
                         
@@ -320,7 +321,7 @@ if dim == 3
                             'yes'
                             cell_distances2 = 1000*ones(length(part3(g+3).Area(:,1)),2);
                             for k = 1:length(part3(g+3).Area(:,1))
-                                if part3(g+3).Probability(k) > ee_thresh
+                                if part3(g+3).Probability(k) > shape2D_thresh
                                     continue
                                 end
                                 

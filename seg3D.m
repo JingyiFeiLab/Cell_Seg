@@ -10,9 +10,9 @@ pix_size = .130; %Microns
 
 int_thresh = .00001; % Intensity Threshold
 convolve_thresh = .05; % Threshold for Voxels to include in Convolved data
-ee_thresh = 1.22;  % <--- Splitting threshold, you can change this
+shape2D_thresh = 1.22;  % <--- Splitting threshold, you can change this
 shape3D_thresh = 2;
-concavity_thresh = .3;
+conc = .3;
 background_thresh = .25;
 pix_neigh = 11; %floor((.08/pix_size)*12); <- If you have no idea, try this
 volume_thresh = 200;
@@ -24,7 +24,7 @@ gap_thresh = 5;
 
 % Path to main file (i.e. channel) that you will use for segmentation
 %filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/September_3_2017_convert/manX_gfp_no_plasmid/t20/sample',num2str(cell_num)]);
-filepath = '/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/1_14_17_invasion_converted/0hr/wt_sopE_G1_crop2';
+filepath = 'D:\For_Seongjin\Cell_Seg-master_4\wt_sopE_G1_crop2';
 
 
 [slice, stack_o, stack_red, stack_green, stack_blue, stack_back, slices, red_back, green_back, blue_back] = imFormat(filepath,ref_channel,dim,ref_slice,slices2D);
@@ -103,7 +103,7 @@ for g = slice
         
         [ellipse1,test1] = ellipseError(objects,i);
         if isempty(ellipse1) == 1 || isempty(test1) == 1
-            ellipse_error(i) = ee_thresh+1;
+            ellipse_error(i) = shape2D_thresh+1;
             continue
         else
             test_ellipse(i) = test1;
@@ -114,7 +114,7 @@ for g = slice
     
     for i = 1:num
         
-        if ellipse_error(i) < ee_thresh
+        if ellipse_error(i) < shape2D_thresh
             objects(objects==i) = 0;
             object_temp = zeros(size(objects));
             for l = 1:length(test_ellipse{i})
@@ -145,7 +145,7 @@ for g = slice
     for i = 1:num
         [~,~,con_peaks] = edgeOptimize(objects,i);
 
-        if ellipse_error(i) >= ee_thresh || con_peaks>=3
+        if ellipse_error(i) >= shape2D_thresh || con_peaks>=3
             mask(objects == i) = 0;
             cell_labels(i) = 1000*(2*g)+q;
             q = q+1;
@@ -212,7 +212,7 @@ for g = slice
         end
         
         clear edge_temp bound_temp
-        split_im = concave_split(objects,i,pix_size,ee_thresh);
+        split_im = concave_split(objects,i,pix_size,shape2D_thresh);
         I2(objects == i) = 0;
         I2 = I2 + split_im;
     end
@@ -226,14 +226,14 @@ for g = slice
     ellipse_error = zeros(num,1);
     test_ellipse = {};
     mask = objects2;
-    
+   
     for round_id = 1:2
         for i = 1:num
             
             [ellipse1,test1] = ellipseError(objects2,i);
             
             if isempty(ellipse1) == 1 || isempty(test1) == 1
-                ellipse_error(i) = ee_thresh+1;
+                ellipse_error(i) = shape2D_thresh+1;
                 continue
             else
                 test_ellipse(i) = test1;
@@ -295,7 +295,7 @@ for g = slice
     
     %Single Cell Prediction
     for i = 1:num
-        if ellipse_error(i) >= ee_thresh %  Non - Single Cells hopefully
+        if ellipse_error(i) >= shape2D_thresh %  Non - Single Cells hopefully
             ellipticity(i,5:8) = NaN;
             mask(objects2 == i) = 0;
             cell_labels(i) = 1000*(2*g)+q;
@@ -340,7 +340,7 @@ if dim == 3
         
         for i= 1:length(part2(g).Area(:,1))    % i = Id'd cell (single or not) in Frame g
             
-            if part2(g).Probability(i) > ee_thresh
+            if part2(g).Probability(i) > shape2D_thresh
                 continue
             end
             
@@ -362,7 +362,7 @@ if dim == 3
             cell_distances = 1000*ones(length(part2(g+1).Area(:,1)),2);
             for j = 1:length(part2(g+1).Area(:,1))
                 
-                if part2(g+1).Probability(j) > ee_thresh
+                if part2(g+1).Probability(j) > shape2D_thresh
                     continue
                 end
                 
@@ -414,7 +414,7 @@ if dim == 3
                     cell_distances2 = 1000*ones(length(part2(g+2).Area(:,1)),2);
                     for k = 1:length(part2(g+2).Area(:,1))
                         
-                        if part2(g+2).Probability(k) > ee_thresh
+                        if part2(g+2).Probability(k) > shape2D_thresh
                             continue
                         end
                         
@@ -463,7 +463,7 @@ if dim == 3
                             'yes'
                             cell_distances2 = 1000*ones(length(part2(g+3).Area(:,1)),2);
                             for k = 1:length(part2(g+3).Area(:,1))
-                                if part2(g+3).Probability(k) > ee_thresh
+                                if part2(g+3).Probability(k) > shape2D_thresh
                                     continue
                                 end
                                 

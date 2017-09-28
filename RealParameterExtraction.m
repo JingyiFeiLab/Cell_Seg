@@ -4,9 +4,9 @@ field1 = 'part1';
 field2 = 'cell_angles';
 field3 = 'Concavity';
 TotalShape = struct(field1, [], field2, [], field3, []);
-num_cells = 1;
+num_cells = 3;
 
-for sim_round = 1:num_cells
+for sim_round = 3:num_cells
     clearvars -except TotalShape sim_round num_cells
     dim  = 3;%input('Number of D''s (2/3) : ');
     ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
@@ -16,9 +16,9 @@ for sim_round = 1:num_cells
     
     int_thresh = .0001; % Intensity Threshold
     convolve_thresh = .05; % Threshold for Voxels to include in Convolved data
-    ee_thresh = 3;  % <--- Splitting threshold, you can change this
+    shape2D_thresh = 3;  % <--- Splitting threshold, you can change this
     shape3D_thresh = 3;
-    concavity_thresh = .3;
+    conc = .3;
     background_thresh = .25;
     pix_neigh = 11; %floor((.08/pix_size)*12); <- If you have no idea, try this
     volume_thresh = 200;
@@ -30,7 +30,7 @@ for sim_round = 1:num_cells
     
     % Path to main file (i.e. channel) that you will use for segmentation
     %filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/September_3_2017_convert/manX_gfp_no_plasmid/t20/sample',num2str(cell_num)]);
-    filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/cell', num2str(sim_round)]);
+    filepath = strcat(['D:\For_Seongjin\Cell_Seg-master_4\cell', num2str(sim_round)]);
     
     
     [slice, stack_o, stack_red, stack_green, stack_blue, stack_back, slices, red_back, green_back, blue_back] = imFormat(filepath,ref_channel,dim,ref_slice,slices2D);
@@ -111,7 +111,7 @@ for sim_round = 1:num_cells
             
             [ellipse1,test1] = ellipseError(objects,i);
             if isempty(ellipse1) == 1 || isempty(test1) == 1
-                ellipse_error(i) = ee_thresh+1;
+                ellipse_error(i) = shape2D_thresh+1;
                 continue
             else
                 test_ellipse(i) = test1;
@@ -122,7 +122,7 @@ for sim_round = 1:num_cells
         
         for i = 1:num
             
-            if ellipse_error(i) < ee_thresh
+            if ellipse_error(i) < shape2D_thresh
                 objects(objects==i) = 0;
                 object_temp = zeros(size(objects));
                 for l = 1:length(test_ellipse{i})
@@ -170,7 +170,7 @@ for sim_round = 1:num_cells
         for i = 1:num
             [~,~,con_peaks] = edgeOptimize(objects,i);
             
-            if ellipse_error(i) >= ee_thresh || con_peaks>=3
+            if ellipse_error(i) >= shape2D_thresh || con_peaks>=3
                 mask(objects == i) = 0;
                 cell_labels(i) = 1000*(2*g)+q;
                 q = q+1;
@@ -232,7 +232,7 @@ for sim_round = 1:num_cells
             
             for i= 1:length(part2(g).Probability(:,1))    % i = Id'd cell (single or not) in Frame g
                 
-                if part2(g).Probability(i) > ee_thresh
+                if part2(g).Probability(i) > shape2D_thresh
                     continue
                 end
                 
@@ -254,7 +254,7 @@ for sim_round = 1:num_cells
                 cell_distances = 1000*ones(length(part2(g+1).Probability(:,1)),2);
                 for j = 1:length(part2(g+1).Probability(:,1))
                     
-                    if part2(g+1).Probability(j) > ee_thresh
+                    if part2(g+1).Probability(j) > shape2D_thresh
                         continue
                     end
                     
@@ -307,7 +307,7 @@ for sim_round = 1:num_cells
                         cell_distances2 = 1000*ones(length(part2(g+2).Probability(:,1)),2);
                         for k = 1:length(part2(g+2).Probability(:,1))
                             
-                            if part2(g+2).Probability(k) > ee_thresh
+                            if part2(g+2).Probability(k) > shape2D_thresh
                                 continue
                             end
                             
@@ -356,7 +356,7 @@ for sim_round = 1:num_cells
                                 'yes'
                                 cell_distances2 = 1000*ones(length(part2(g+3).Probability(:,1)),2);
                                 for k = 1:length(part2(g+3).Probability(:,1))
-                                    if part2(g+3).Probability(k) > ee_thresh
+                                    if part2(g+3).Probability(k) > shape2D_thresh
                                         continue
                                     end
                                     
@@ -842,7 +842,7 @@ for sim_round = 1:num_cells
 end
 
 %%
-cells = 1:num_cells;
+cells = 3:num_cells;
 shape3D = [];
 shape2d = [];
 concavity = [];
@@ -883,10 +883,10 @@ for i = cells
     concavity = [concavity; TotalShape(i).Concavity];
 end
 
-FinalStruct.shape2D = shape2d;
-FinalStruct.Concavity = concavity;
-FinalStruct.Dcenter = dist_thresh;
-FinalStruct.shape3D = shape3D;
-FinalStruct.Zangle = zangle;
-FinalStruct.Volume = volume;
-FinalStruct.Slices = slices;
+FinalStruct.shape2D_thresh = shape2d;
+FinalStruct.Conc = concavity;
+FinalStruct.Dist_thresh = dist_thresh;
+FinalStruct.shape3D_thresh = shape3D;
+FinalStruct.Zangle_thresh = zangle;
+FinalStruct.Volume_thresh = volume;
+FinalStruct.Slice_thresh = slices;
