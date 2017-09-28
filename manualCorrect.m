@@ -129,12 +129,6 @@ while 0<1
                          
         set(figure,'Position',p)
         set(gca,'Units','normalized', 'Position' ,[0.05 0.05 .95 .85])
-        
-        str = {'Positive Selection', 'Negative Selection'};
-        t = text([2 2],[4 8],str);
-        t(1).Color = 'blue'; t(1).FontSize = 14 ;
-        t(2).Color = 'red'; t(2).FontSize = 14 ;    
-        
        
         if exist('new_borders') == 0
             varargout{1} = [];
@@ -247,11 +241,7 @@ while 0<1
         set(figure,'Position',p)
         set(gca,'Units','normalized', 'Position' ,[0.05 0.05 .95 .85])
         
-        str = {'Positive Selection', 'Negative Selection'};
-        t = text([2 2],[4 8],str);
-        t(1).Color = 'blue'; t(1).FontSize = 14 ;
-        t(2).Color = 'red'; t(2).FontSize = 14 ;    
-        varargout{1} = new_borders;
+        
     end
     
 end
