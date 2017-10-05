@@ -5,7 +5,7 @@ clc
 for cell_num = 1;
 %filename = strcat(['ptsG_gfp_plus_t20_sample_00',num2str(cell_num),'.mat']);
 
-dim  = 2;%input('Number of D''s (2/3) : ');
+dim  = 2;
 ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
 ref_slice = 5; % Change this to the most in-focus slice
 slices2D = 2; % How many frames above and below reference frame (e.g. 4 = reference frame +/- 4 frames)
@@ -26,8 +26,8 @@ low_pass_check = 0; % 1 = on. Change to 0 if you want to turn it off
 gap_thresh = 5;
 
 % Path to main file (i.e. channel) that you will use for segmentation
-filepath = strcat(['D:\For_Seongjin\Cell_Seg-master_4\sample',num2str(cell_num)]);
-filepath_dic = strcat(['D:\For_Seongjin\Cell_Seg-master_4\sample1\New_folder\+SgrS_t=0_DIC',num2str(cell_num),'.tif']);
+filepath = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/September_7_17_convert/+SgrS/t=20/sample',num2str(cell_num)]);
+filepath_dic = strcat(['/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/September_7_17_convert/+SgrS/t=20/+SgrS_t=20_DIC',num2str(cell_num),'.tif']);
 %
 %filepath = '/Users/reyer/Documents/MATLAB/SOURCE_CODES/sample_images_matt/Matt_Microscope/1_14_17_invasion_converted/0hr/wt_sopE_G1_crop';
 
@@ -206,7 +206,7 @@ for g = slice
     
     I2 = part1(g).All;
         
-    for i = non_single(9:19)
+    for i = non_single
         
         strcat(['splitting cell ', num2str(i), ' ... '])
         if i > length(part1(g).Probability)
