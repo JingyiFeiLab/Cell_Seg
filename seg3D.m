@@ -3,6 +3,7 @@ clc
 
 
 dim  = 3;%input('Number of D''s (2/3) : ');
+channels = 3;
 ref_channel = 2; % Change to most in-focus channel. Probably 2/green or 3/blue
 ref_slice = 5;
 slices2D = 2; % How many frames above and below reference frame (e.g. 4 = reference frame +/- 4 frames)
@@ -27,8 +28,8 @@ gap_thresh = 5;
 filepath = 'D:\For_Seongjin\Cell_Seg-master_4\wt_sopE_G1_crop2';
 
 
-[slice, stack_o, stack_red, stack_green, stack_blue, stack_back, slices, red_back, green_back, blue_back] = imFormat(filepath,ref_channel,dim,ref_slice,slices2D);
-
+[slice, stack_o, stack_one,stack_two, ~, stack_back, slices] = imFormat(filepath,ref_channel,dim,ref_slice,slices2D,channels);
+        
 
 se = [1 1 1; 1 1 1 ; 1 1 1]; % Structuring Element for basic Erosion and dilation
 
@@ -938,22 +939,63 @@ elseif dim == 2
     end
 end
 
+if dim == 3
+    total_cells_one = zeros(size(total_cells));
+    total_cells_two = zeros(size(total_cells));
+    total_cells_three = zeros(size(total_cells));
+    
+    % Red Alignment
+    for slice = 1:slices
+        fixed = stack_one(:,:,slice);
+        moving = total_cells(:,:,slice);
+        
+        [optimizer,metric] = imregconfig('multimodal');
+        total_cells_one_temp = imregister(moving,fixed,'rigid',optimizer,metric);
+        total_cells_one_temp(ceil(total_cells_one_temp)~=total_cells_one_temp) = 0;
+        total_cells_one_temp = imdilate(total_cells_one_temp,se);
+        total_cells_one(:,:,slice) = total_cells_one_temp;
+        
+        
+        % Green Alignment
+        if exist('stack_two') == 1
+            fixed = stack_two(:,:,slice);
+            moving = total_cells(:,:,slice);
+            
+            [optimizer,metric] = imregconfig('multimodal');
+            total_cells_two_temp = imregister(moving,fixed,'rigid',optimizer,metric);
+            total_cells_two_temp(ceil(total_cells_two_temp)~=total_cells_two_temp) = 0;
+            total_cells_two_temp = imdilate(total_cells_two_temp,se);
+            total_cells_two(:,:,slice) = total_cells_two_temp;
+        end
+        
+        % Blue Alignment
+        if exist('stack_three') == 1
+            fixed = stack_three(:,:,slice);
+            moving = total_cells(:,:,slice);
+            
+            [optimizer,metric] = imregconfig('multimodal');
+            total_cells_three_temp = imregister(moving,fixed,'rigid',optimizer,metric);
+            total_cells_three_temp(ceil(total_cells_three_temp)~=total_cells_three_temp) = 0;
+            total_cells_three_temp = imdilate(total_cells_three_temp,se);
+            total_cells_three(:,:,slice) = total_cells_three_temp;
+            
+        end
+    end
+    
+end
+
 
 %% Final Characterizaton (Volume, Integrated Intensity, etc.)
 
 field1 = 'Cell';
 field2 = 'Volume';
 field3 = 'Center';
-field4 = 'Intensity';
-field5 = 'Intensity_Red';
-field6 = 'Intensity_Green';
-field7 = 'Intensity_Blue';
-field8 = 'Background';
-field9 = 'Red_Background';
-field9 = 'Green_Background';
-field10 = 'Blue_Background';
+field4 = 'Intensity_One';
+field5 = 'Intensity_Two';
+field6 = 'Intensity_Three';
 
-part4 = struct(field1,[],field2,[],field3,[],field4,[],field5,[],field6,[],field7,[],field8,[],field9,[],field10,[]);
+
+part4 = struct(field1,[],field2,[],field3,[],field4,[],field5,[],field6,[]);
 
 
 for i = 1:index
@@ -962,22 +1004,17 @@ for i = 1:index
     [center, volume] = cellCenter(total_cells,i);
     part4(i).Volume = length(volume);
     part4(i).Center = center;
-    part4(i).Intensity = cellIntensity(total_cells,stack2,i);
-    part4(i).Background = cellIntensity(total_cells,stack_back,i);
     
-    if exist('stack_red') == 1
-        part4(i).Intensity_Red = cellIntensity(total_cells,stack_red,i);
-        part4(i).Red_Background = cellIntensity(total_cells,red_back,i);
+    if exist('stack_one') == 1
+        part4(i).Intensity_One = cellIntensity(total_cells_one,stack_one,i);
     end
     
-    if exist('stack_blue') == 1
-        part4(i).Intensity_Blue = cellIntensity(total_cells,stack_blue,i);
-        part4(i).Blue_Background = cellIntensity(total_cells,blue_back,i);
+    if exist('stack_two') == 1
+        part4(i).Intensity_Two = cellIntensity(total_cells_two,stack_two,i);
     end
     
-    if exist('stack_green') == 1
-        part4(i).Intensity_Green = cellIntensity(total_cells,stack_green,i);
-        part4(i).Green_Background = cellIntensity(total_cells,green_back,i);
+    if exist('stack_three') == 1
+        part4(i).Intensity_Three = cellIntensity(total_cells_three,stack_three,i);
     end
     
 end

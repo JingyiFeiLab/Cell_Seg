@@ -24,7 +24,7 @@ for i = id
     
 
     
-    if length(max_cave(:,1)) < 1 | size(max_cave) == [0,0];
+    if length(max_cave(:,1)) < 1 | size(max_cave) == [0,0] | size(max_cave) == [1,2];
         split_im = object;
         break
     end
@@ -302,6 +302,9 @@ for i = id
         
         if length(e_error) == 2 && e_error(1) < ee_thresh && e_error(2)< ee_thresh && sum(e_error) < final_error_array(2)
             object_composite = object_composite_old;
+            if isempty(split_lines)
+                break
+            end
             object_new = object_new_old;
             object_new(sub2ind(size(object),split_lines{error_array(1)}(:,1),split_lines{error_array(1)}(:,2))) = 0;
             object_new2 = bwlabel(object_new,4);
